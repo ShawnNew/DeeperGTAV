@@ -14,12 +14,12 @@ public:
 	friend class Server;
 
 	enum OPERATION_MODE {
-		LIDAR_NOT_INIT_YET,
-		LIDAR_INIT_AS_2D,
-		LIDAR_INIT_AS_3D_CONE,
-		LIDAR_INIT_AS_3D_SCALED_CONE,
-		LIDAR_INIT_AS_3D_SPACIALCIRCLE,
-		LIDAR_INIT_AS_3D_SCALED_SPACIALCIRCLE
+		LIDAR_NOT_INIT_YET,                 //0
+		LIDAR_INIT_AS_2D,                   //1
+		LIDAR_INIT_AS_3D_CONE,              //2
+		LIDAR_INIT_AS_3D_SCALED_CONE,       //3
+		LIDAR_INIT_AS_3D_SPACIALCIRCLE,     //4
+		LIDAR_INIT_AS_3D_SCALED_SPACIALCIRCLE//5
 	};
 
 	//Easy APIs for DeepGTAV: set up params before sending a lidar msg

@@ -31,7 +31,7 @@ public:
 	void setDatasetParams(const Value& dc, Document &d);
 	void sendTaskMsgs(Document &d); 	//virtual func
 	void showTaskStates();
-	static std::vector<Content> _allTaskList;
+	static std::vector<Content> _allTaskList;  //all the task functions needed
 	std::vector<Content *> _taskList;
 
 private:

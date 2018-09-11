@@ -204,7 +204,7 @@ void ScenarioMsg::vehicles(Document & d)
 	Document::AllocatorType& allocator = d.GetAllocator();
 
 	Vector3 FUR; //Front Upper Right, the first element of 3D bounding box
-	Vector3 BLL; //Back Lower Lelft, the second element of 3D bounding box
+	Vector3 BLL; //Back Lower Left, the second element of 3D bounding box
 	Vector3 dim; //Vehicle dimensions
 	Vector3 upVector, rightVector, forwardVector, eulerAttiAngles, position; //Vehicles' attitude angles(xroll,ypitch,zhead) and position
 	Hash model;
@@ -270,29 +270,6 @@ void ScenarioMsg::vehicles(Document & d)
 
 					Value vehJsVal(kObjectType);
 					Value jsVec(kArrayType);
-#if 0
-					jsVec.PushBack(FUR.x - currentPos.x, allocator).PushBack(FUR.y - currentPos.y, allocator).PushBack(FUR.z - currentPos.z, allocator);
-					vehJsVal.AddMember("FUR", jsVec, allocator);
-					jsVec.SetArray();
-					jsVec.PushBack(BLL.x - currentPos.x, allocator).PushBack(BLL.y - currentPos.y, allocator).PushBack(BLL.z - currentPos.z, allocator);
-					vehJsVal.AddMember("BLL", jsVec, allocator);
-					jsVec.SetArray();
-					for (int j = 0; j < 8; j++)
-						jsVec.PushBack(edges[j].x - currentPos.x, allocator).PushBack(edges[j].y - currentPos.y, allocator).PushBack(edges[j].z - currentPos.z, allocator);
-					vehJsVal.AddMember("bbEdges", jsVec, allocator);
-					jsVec.SetArray();
-					jsVec.PushBack(position.x, allocator).PushBack(position.y, allocator).PushBack(position.z, allocator);
-					vehJsVal.AddMember("position", jsVec, allocator);
-					jsVec.SetArray();
-					jsVec.PushBack(eulerAttiAngles.x*D2R, allocator).PushBack(eulerAttiAngles.y*D2R, allocator).PushBack(eulerAttiAngles.z*D2R, allocator);
-					vehJsVal.AddMember("eulerAngles", jsVec, allocator);
-					jsVec.SetArray();
-					vehJsVal.AddMember("heading", heading*D2R, allocator);
-#endif // 0
-					vehJsVal.AddMember("distance", dist, allocator).AddMember("direction", direction, allocator).AddMember("yaw", eulerAttiAngles.z*D2R, allocator).AddMember("speed", speed, allocator)
-						.AddMember("acceleration", accelerate, allocator).AddMember("classID", classid, allocator);
-
-					vehsJsVal.PushBack(vehJsVal, allocator);
 
 #ifdef DEBUG_GRAPHICS_VEH
 					Vector3 edges[8];
@@ -337,6 +314,30 @@ void ScenarioMsg::vehicles(Document & d)
 					GRAPHICS::DRAW_LINE(edges[2].x, edges[2].y, edges[2].z, edges[4].x, edges[4].y, edges[4].z, 0, 255, 0, 200);
 					GRAPHICS::DRAW_LINE(edges[3].x, edges[3].y, edges[3].z, edges[5].x, edges[5].y, edges[5].z, 0, 255, 0, 200);
 #endif//DEBUG_GRAPHICS_VEH
+
+#if 1
+					jsVec.PushBack(FUR.x - currentPos.x, allocator).PushBack(FUR.y - currentPos.y, allocator).PushBack(FUR.z - currentPos.z, allocator);
+					vehJsVal.AddMember("FUR", jsVec, allocator);
+					jsVec.SetArray();
+					jsVec.PushBack(BLL.x - currentPos.x, allocator).PushBack(BLL.y - currentPos.y, allocator).PushBack(BLL.z - currentPos.z, allocator);
+					vehJsVal.AddMember("BLL", jsVec, allocator);
+					jsVec.SetArray();
+					for (int j = 0; j < 8; j++)
+						jsVec.PushBack(edges[j].x - currentPos.x, allocator).PushBack(edges[j].y - currentPos.y, allocator).PushBack(edges[j].z - currentPos.z, allocator);
+					vehJsVal.AddMember("bbEdges", jsVec, allocator);
+					jsVec.SetArray();
+					jsVec.PushBack(position.x, allocator).PushBack(position.y, allocator).PushBack(position.z, allocator);
+					vehJsVal.AddMember("position", jsVec, allocator);
+					jsVec.SetArray();
+					jsVec.PushBack(eulerAttiAngles.x*D2R, allocator).PushBack(eulerAttiAngles.y*D2R, allocator).PushBack(eulerAttiAngles.z*D2R, allocator);
+					vehJsVal.AddMember("eulerAngles", jsVec, allocator);
+					jsVec.SetArray();
+					vehJsVal.AddMember("heading", heading*D2R, allocator);
+#endif // 0
+					vehJsVal.AddMember("distance", dist, allocator).AddMember("direction", direction, allocator).AddMember("yaw", eulerAttiAngles.z*D2R, allocator).AddMember("speed", speed, allocator)
+						.AddMember("acceleration", accelerate, allocator).AddMember("classID", classid, allocator);
+
+					vehsJsVal.PushBack(vehJsVal, allocator);
 				}
 			}
 		}
@@ -354,7 +355,7 @@ void ScenarioMsg::peds(Document & d)
 	Document::AllocatorType& allocator = d.GetAllocator();
 
 	Vector3 FUR; //Front Upper Right
-	Vector3 BLL; //Back Lower Lelft
+	Vector3 BLL; //Back Lower Left
 	Vector3 dim; //Vehicle dimensions
 	Vector3 upVector, rightVector, forwardVector, eulerAttiAngles, position; //Peds' attitude angles(xroll,ypitch,zhead) and position
 	Hash model;
@@ -412,28 +413,6 @@ void ScenarioMsg::peds(Document & d)
 
 					Value pedJsVal(kObjectType);
 					Value jsVec(kArrayType);
-#if 0
-					jsVec.PushBack(FUR.x - currentPos.x, allocator).PushBack(FUR.y - currentPos.y, allocator).PushBack(FUR.z - currentPos.z, allocator);
-					pedJsVal.AddMember("FUR", jsVec, allocator);
-					jsVec.SetArray();
-					jsVec.PushBack(BLL.x - currentPos.x, allocator).PushBack(BLL.y - currentPos.y, allocator).PushBack(BLL.z - currentPos.z, allocator);
-					pedJsVal.AddMember("BLL", jsVec, allocator);
-					jsVec.SetArray();
-					for (int j = 0; j < 8; j++)
-						jsVec.PushBack(edges[j].x - currentPos.x, allocator).PushBack(edges[j].y - currentPos.y, allocator).PushBack(edges[j].z - currentPos.z, allocator);
-					pedJsVal.AddMember("bbEdges", jsVec, allocator);
-					jsVec.SetArray();
-					jsVec.PushBack(position.x, allocator).PushBack(position.y, allocator).PushBack(position.z, allocator);
-					pedJsVal.AddMember("position", jsVec, allocator);
-					jsVec.SetArray();
-					jsVec.PushBack(eulerAttiAngles.x*D2R, allocator).PushBack(eulerAttiAngles.y*D2R, allocator).PushBack(eulerAttiAngles.z*D2R, allocator);
-					pedJsVal.AddMember("eulerAngles", jsVec, allocator);
-					jsVec.SetArray();
-					pedJsVal.AddMember("heading", heading*D2R, allocator);
-#endif // 0
-					pedJsVal.AddMember("distance", dist, allocator).AddMember("direction", direction, allocator).AddMember("yaw", eulerAttiAngles.z * D2R, allocator)
-						.AddMember("speed", speed, allocator).AddMember("classID", classid, allocator);
-					pedsJsVal.PushBack(pedJsVal, allocator);
 
 #ifdef DEBUG_GRAPHICS_PED
 					Vector3 edges[8];
@@ -478,6 +457,28 @@ void ScenarioMsg::peds(Document & d)
 					GRAPHICS::DRAW_LINE(edges[2].x, edges[2].y, edges[2].z, edges[4].x, edges[4].y, edges[4].z, 255, 0, 0, 200);
 					GRAPHICS::DRAW_LINE(edges[3].x, edges[3].y, edges[3].z, edges[5].x, edges[5].y, edges[5].z, 255, 0, 0, 200);
 #endif//DEBUG_GRAPHICS_PED
+#if 1
+					jsVec.PushBack(FUR.x - currentPos.x, allocator).PushBack(FUR.y - currentPos.y, allocator).PushBack(FUR.z - currentPos.z, allocator);
+					pedJsVal.AddMember("FUR", jsVec, allocator);
+					jsVec.SetArray();
+					jsVec.PushBack(BLL.x - currentPos.x, allocator).PushBack(BLL.y - currentPos.y, allocator).PushBack(BLL.z - currentPos.z, allocator);
+					pedJsVal.AddMember("BLL", jsVec, allocator);
+					jsVec.SetArray();
+					for (int j = 0; j < 8; j++)
+						jsVec.PushBack(edges[j].x - currentPos.x, allocator).PushBack(edges[j].y - currentPos.y, allocator).PushBack(edges[j].z - currentPos.z, allocator);
+					pedJsVal.AddMember("bbEdges", jsVec, allocator);
+					jsVec.SetArray();
+					jsVec.PushBack(position.x, allocator).PushBack(position.y, allocator).PushBack(position.z, allocator);
+					pedJsVal.AddMember("position", jsVec, allocator);
+					jsVec.SetArray();
+					jsVec.PushBack(eulerAttiAngles.x*D2R, allocator).PushBack(eulerAttiAngles.y*D2R, allocator).PushBack(eulerAttiAngles.z*D2R, allocator);
+					pedJsVal.AddMember("eulerAngles", jsVec, allocator);
+					jsVec.SetArray();
+					pedJsVal.AddMember("heading", heading*D2R, allocator);
+#endif // 0
+					pedJsVal.AddMember("distance", dist, allocator).AddMember("direction", direction, allocator).AddMember("yaw", eulerAttiAngles.z * D2R, allocator)
+						.AddMember("speed", speed, allocator).AddMember("classID", classid, allocator);
+					pedsJsVal.PushBack(pedJsVal, allocator);
 
 				}
 			}

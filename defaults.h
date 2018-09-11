@@ -24,9 +24,9 @@
 #define _CAMERA_INFO_ false
 #define _EULER_ANGLES_ false
 #define _IS_COLLIDE_ false
-#define _CAM_OFFSET_TO_ENTITY_X_ .0f
-#define _CAM_OFFSET_TO_ENTITY_Y_ 0.5f
-#define _CAM_OFFSET_TO_ENTITY_Z_ 0.8f
+#define _CAM_OFFSET_TO_ENTITY_X_ .0f    //vertical of driving direction
+#define _CAM_OFFSET_TO_ENTITY_Y_ .0f  //driving direction
+#define _CAM_OFFSET_TO_ENTITY_Z_ 0.8f   //height
 
 
 

@@ -271,7 +271,7 @@ void Server::addSendItems()
 		++i;
 	}
 	if (scenario.liDARDevice._initType != LiDAR::LIDAR_NOT_INIT_YET) {
-		_sendItemList.push_back(SendItem((const char **)&scenario.liDARDevice._pointClouds, &scenario.liDARDevice._lenght, "lidar"));
+		_sendItemList.push_back(SendItem((const char **)&scenario.liDARDevice._pointCloudsList, &scenario.liDARDevice._lenght, "lidar"));
 		allMsgFlag |= 0x1 << i;
 		++i;
 	}

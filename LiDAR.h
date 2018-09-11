@@ -10,16 +10,26 @@ class LiDAR : public Task, public ISetDatasetParams, public IShowTaskStates
 public:
 	LiDAR();
 	~LiDAR();
+	//ray struct
+	struct ray {
+		float x;
+		float y;
+		float z;
+		int entityType;					//indicate the type of the entity
+		int rayResult;                  //indicate whether the ray is hit       
+		float range;
+	};
+
 
 	friend class Server;
 
 	enum OPERATION_MODE {
-		LIDAR_NOT_INIT_YET,
-		LIDAR_INIT_AS_2D,
-		LIDAR_INIT_AS_3D_CONE,
-		LIDAR_INIT_AS_3D_SCALED_CONE,
-		LIDAR_INIT_AS_3D_SPACIALCIRCLE,
-		LIDAR_INIT_AS_3D_SCALED_SPACIALCIRCLE
+		LIDAR_NOT_INIT_YET,                 //0
+		LIDAR_INIT_AS_2D,                   //1
+		LIDAR_INIT_AS_3D_CONE,              //2
+		LIDAR_INIT_AS_3D_SCALED_CONE,       //3
+		LIDAR_INIT_AS_3D_SPACIALCIRCLE,     //4
+		LIDAR_INIT_AS_3D_SCALED_SPACIALCIRCLE//5
 	};
 
 	//Easy APIs for DeepGTAV: set up params before sending a lidar msg
@@ -29,7 +39,7 @@ public:
 	
 	void showTaskStates();
 
-	//Specific APIs for scaled sample(make point cloud sperad more evenly), call it after setDatasetParams, setVehID, setCamID
+	//Specific APIs for scaled sample(make point cloud spread more evenly), call it after setDatasetParams, setVehID, setCamID
 	void Init3DLiDAR_Scaled(bool isVisual = false, float maxRange = 100.0f, int totalSmplNum = 1000, float horizLeLimit = 60.0f, 
 		float horizRiLimit = 300.0f, int vertiSmplNum = 20, float vertiUpLimit = 85.0f, float vertiUnLimit = 125.0f);
 
@@ -58,7 +68,7 @@ public:
 
 	void DestroyLiDAR();
 
-	float* GeneratePointClouds();
+	ray* GeneratePointClouds();
 	int getTotalSmplNum();
 	int getVertiSmplNum();
 	int getHorizSmplNum();
@@ -66,15 +76,15 @@ public:
 
 private:
 
-	inline void GenerateSinglePoint(float *scPhi_scTheta, float *p);
-	inline void GenerateHorizPointClouds(float phi, float resolu, int smplNum, float *p);
-	inline void GenerateHorizPointClouds(float phi, float resolu, int smplNum, float *p, std::vector<float>&sinTheta, std::vector<float>&cosTheta);
+	inline void GenerateSinglePoint(float *scPhi_scTheta, ray* p);
+	inline void GenerateHorizPointClouds(float phi, float resolu, int smplNum, ray *p);
+	inline void GenerateHorizPointClouds(float phi, float resolu, int smplNum, ray *p, std::vector<float>&sinTheta, std::vector<float>&cosTheta);
 	inline void UpdatePosAngles();
 
 private: 
-	float* _pointClouds;
+	//float* _pointClouds;
 	unsigned int _lenght;
-
+	ray* _pointCloudsList;
 	float _maxRange;		//meter
 	float _lidarHeight;		//meter
 	float _vertiUpLimit;	//deg, the upside limit of zenith direction, namely the min vertical angle, 0 <= up <= phiUp < 90

@@ -290,8 +290,8 @@ void LiDAR::Init3DLiDAR_Scaled(bool isVisual, float maxRange, int totalSmplNum, 
 	}
 
 	if (!_pointCloudsList) free(_pointCloudsList);
-	_lenght = _totalSmplNum * sizeof(ray);
-	_pointCloudsList = (ray *)malloc(_lenght);  //allocate memory for point-cloud list dynamically
+	_lenght = _totalSmplNum * sizeof(LiDAR::ray);
+	_pointCloudsList = (LiDAR::ray *)malloc(_lenght);  //allocate memory for point-cloud list dynamically
 	if (_pointCloudsList == NULL)
 		printf("\nLiDAR: memory alloc err");
 
@@ -468,6 +468,7 @@ inline void LiDAR::GenerateSinglePoint(float *scPhi_scTheta, ray* p)
 	float range;
 	int hit = 0;
 	int hitEntityHandle = -1;
+	int entityType;
 	
 	//scPhi_scTheta: sin(phi_rad), cos(phi_rad), sin(theta_rad), cos(theta_rad)
 	//I define x as forward in body frame, but in GTAV frame, y is the forward(north). That's why the equations are looked wired. But I'm tired to 
@@ -513,24 +514,16 @@ inline void LiDAR::GenerateSinglePoint(float *scPhi_scTheta, ray* p)
 
 	//get result and store it into the pointcloud list
 	p->rayResult = rayResult;
-	p->hitcoordinates = endCoord;
+	p->x = endCoord.x;
+	p->y = endCoord.y;
+	p->z = endCoord.z;
+	//p->hitcoordinates = endCoord;
 
 
-	std::string entityTypeName = "Unknown";
-	if (ENTITY::DOES_ENTITY_EXIST(hitEntityHandle)) {
-		int entityType = ENTITY::GET_ENTITY_TYPE(hitEntityHandle);
-		if (entityType == 1) {
-			entityTypeName = "GTA.Ped";
-		}
-		else if (entityType == 2) {
-			entityTypeName = "GTA.Vehicle";
-		}
-		else if (entityType == 3)
-		{
-			entityTypeName = "GTA.Prop";
-		}
-	}
-	p->entityTypeName = entityTypeName;
+	//std::string entityTypeName = "Unknown";
+	if (ENTITY::DOES_ENTITY_EXIST(hitEntityHandle)) entityType = ENTITY::GET_ENTITY_TYPE(hitEntityHandle);
+
+	p->entityType = entityType;
 	range = sqrt((endCoord.x - _curPos.x) * (endCoord.x - _curPos.x) +
 	(endCoord.y - _curPos.y) * (endCoord.y - _curPos.y) +
 		(endCoord.z - _curPos.z) * (endCoord.z - _curPos.z));

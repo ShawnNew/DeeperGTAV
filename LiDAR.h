@@ -12,8 +12,10 @@ public:
 	~LiDAR();
 	//ray struct
 	struct ray {
-		Vector3 hitcoordinates;
-		std::string entityTypeName;     //indicate the type of entity if the ray is hit
+		float x;
+		float y;
+		float z;
+		int entityType;					//indicate the type of the entity
 		int rayResult;                  //indicate whether the ray is hit       
 		float range;
 	};
@@ -80,7 +82,7 @@ private:
 	inline void UpdatePosAngles();
 
 private: 
-	float* _pointClouds;
+	//float* _pointClouds;
 	unsigned int _lenght;
 	ray* _pointCloudsList;
 	float _maxRange;		//meter

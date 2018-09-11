@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <ctime>
 
-LiDAR::LiDAR() : _pointClouds(NULL)
+LiDAR::LiDAR() : _pointCloudsList(NULL)
 {
 	_taskName = "lidar";
 	DestroyLiDAR();
@@ -289,10 +289,10 @@ void LiDAR::Init3DLiDAR_Scaled(bool isVisual, float maxRange, int totalSmplNum, 
 		}
 	}
 
-	if (!_pointClouds) free(_pointClouds);
-	_lenght = _totalSmplNum * sizeof(float);
-	_pointClouds = (float *)malloc(_lenght);
-	if (_pointClouds == NULL)
+	if (!_pointCloudsList) free(_pointCloudsList);
+	_lenght = _totalSmplNum * sizeof(ray);
+	_pointCloudsList = (ray *)malloc(_lenght);  //allocate memory for point-cloud list dynamically
+	if (_pointCloudsList == NULL)
 		printf("\nLiDAR: memory alloc err");
 
 	if (_initType == LiDAR::LIDAR_NOT_INIT_YET) {
@@ -314,10 +314,10 @@ void LiDAR::Init2DLiDAR_SmplNum(bool isVisual, float maxRange, int horizSmplNum,
 	_horizLeLimit = horizLeLimit;
 	_horizRiLimit = horizRiLimit;
 	_horizResolu = (_horizLeLimit + 360.0f - _horizRiLimit) / _horizSmplNum;
-	if (!_pointClouds) free(_pointClouds);
-	_lenght = _horizSmplNum * sizeof(float);
-	_pointClouds = (float *)malloc(_lenght);
-	if (_pointClouds == NULL)
+	if (!_pointCloudsList) free(_pointCloudsList);
+	_lenght = _horizSmplNum * sizeof(ray);
+	_pointCloudsList = (ray *)malloc(_lenght);
+	if (_pointCloudsList == NULL)
 		printf("\nLiDAR: memory alloc err");
 
 	_initType = LiDAR::LIDAR_INIT_AS_2D;
@@ -351,10 +351,10 @@ void LiDAR::Init3DLiDAR_SmplNum(bool isVisual, float maxRange, int horizSmplNum,
 	_horizRiLimit = horizRiLimit;
 	_horizResolu = (_horizLeLimit + 360.0f - _horizRiLimit) / _horizSmplNum;
 
-	if (!_pointClouds) free(_pointClouds);
-	_lenght = _vertiSmplNum * _horizSmplNum * sizeof(float);
-	_pointClouds = (float *)malloc(_lenght);
-	if (_pointClouds == NULL)
+	if (!_pointCloudsList) free(_pointCloudsList);
+	_lenght = _vertiSmplNum * _horizSmplNum * sizeof(ray);
+	_pointCloudsList = (ray *)malloc(_lenght);
+	if (_pointCloudsList == NULL)
 		printf("\nLiDAR: memory alloc err");
 
 	if (_initType == LiDAR::LIDAR_NOT_INIT_YET) {
@@ -364,10 +364,10 @@ void LiDAR::Init3DLiDAR_SmplNum(bool isVisual, float maxRange, int horizSmplNum,
 
 void LiDAR::DestroyLiDAR()
 {
-	if (_pointClouds)
+	if (_pointCloudsList)
 	{
-		free(_pointClouds);
-		_pointClouds = NULL;
+		free(_pointCloudsList);
+		_pointCloudsList = NULL;
 	}
 	_maxRange = 0;
 	_lidarHeight = 0;
@@ -387,7 +387,7 @@ void LiDAR::DestroyLiDAR()
 	_isVisual = false;
 }
 
-float* LiDAR::GeneratePointClouds()
+LiDAR::ray* LiDAR::GeneratePointClouds()
 {
 	float phi = _vertiUnLimit;
 	int horizOffset = 0;
@@ -396,7 +396,7 @@ float* LiDAR::GeneratePointClouds()
 	switch (_initType)
 	{
 	case LIDAR_INIT_AS_2D: 
-		GenerateHorizPointClouds(90.0f, _horizResolu, _horizSmplNum, _pointClouds);
+		GenerateHorizPointClouds(90.0f, _horizResolu, _horizSmplNum, _pointCloudsList);
 		break;
 	case LIDAR_INIT_AS_3D_CONE: 
 	case LIDAR_INIT_AS_3D_SPACIALCIRCLE:
@@ -406,7 +406,7 @@ float* LiDAR::GeneratePointClouds()
 				phi = _vertiUnLimit - k * _vertiResolu;
 			else
 				break;
-			GenerateHorizPointClouds(phi, _horizResolu, _horizSmplNum, &_pointClouds[k * _horizSmplNum]);
+			GenerateHorizPointClouds(phi, _horizResolu, _horizSmplNum, &_pointCloudsList[k * _horizSmplNum]);
 		}
 		break;
 	case LIDAR_INIT_AS_3D_SCALED_CONE:
@@ -422,7 +422,7 @@ float* LiDAR::GeneratePointClouds()
 				phi, 
 				_horiz_scaled_helper[k]._horizResolu_sacled, 
 				_horiz_scaled_helper[k]._horizSmplNum_scaled,
-				&_pointClouds[horizOffset],
+				&_pointCloudsList[horizOffset],
 				_horiz_scaled_helper[k].sinTheta, 
 				_horiz_scaled_helper[k].cosTheta
 				);
@@ -431,7 +431,7 @@ float* LiDAR::GeneratePointClouds()
 	default:
 		break;
 	}
-	return _pointClouds;
+	return _pointCloudsList;
 }
 
 int LiDAR::getTotalSmplNum()
@@ -462,10 +462,12 @@ int LiDAR::getCurType()
 	return _initType;
 }
 
-inline void LiDAR::GenerateSinglePoint(float *scPhi_scTheta, float* p)
+inline void LiDAR::GenerateSinglePoint(float *scPhi_scTheta, ray* p)
 {
 	Vector3 tmp, endCoord; //tmp is target or surfaceNormal
 	float range;
+	int hit = 0;
+	int hitEntityHandle = -1;
 	
 	//scPhi_scTheta: sin(phi_rad), cos(phi_rad), sin(theta_rad), cos(theta_rad)
 	//I define x as forward in body frame, but in GTAV frame, y is the forward(north). That's why the equations are looked wired. But I'm tired to 
@@ -494,26 +496,46 @@ inline void LiDAR::GenerateSinglePoint(float *scPhi_scTheta, float* p)
 	tmp.z = _rotDCM[6] * endCoord.x + _rotDCM[7] * endCoord.y + _rotDCM[8] * endCoord.z + _curPos.z;
 
 	//options: -1=everything
-	WORLDPROBE::_GET_RAYCAST_RESULT(
-		WORLDPROBE::_CAST_RAY_POINT_TO_POINT(	_curPos.x, 
-												_curPos.y, 
-												_curPos.z, 
-												tmp.x,			//target
-												tmp.y,			//target
-												tmp.z,			//target
-												-1, 
-												_vehicle, 
-												7), 
-		(BOOL *)&range,	//is Hit, useless
-		&endCoord, 
+	int rayResult = WORLDPROBE::_GET_RAYCAST_RESULT(
+		WORLDPROBE::_CAST_RAY_POINT_TO_POINT(_curPos.x,
+			_curPos.y,
+			_curPos.z,
+			tmp.x,			//target
+			tmp.y,			//target
+			tmp.z,			//target
+			-1,
+			_vehicle,
+			7),
+		&hit,	//is Hit, useless
+		&endCoord,
 		&tmp,			//surfaceNormal, useless
-		(int *)&tmp._paddingx);//hit entity, useless
+		&hitEntityHandle);//hit entity, useless
 
+	//get result and store it into the pointcloud list
+	p->rayResult = rayResult;
+	p->hitcoordinates = endCoord;
+
+
+	std::string entityTypeName = "Unknown";
+	if (ENTITY::DOES_ENTITY_EXIST(hitEntityHandle)) {
+		int entityType = ENTITY::GET_ENTITY_TYPE(hitEntityHandle);
+		if (entityType == 1) {
+			entityTypeName = "GTA.Ped";
+		}
+		else if (entityType == 2) {
+			entityTypeName = "GTA.Vehicle";
+		}
+		else if (entityType == 3)
+		{
+			entityTypeName = "GTA.Prop";
+		}
+	}
+	p->entityTypeName = entityTypeName;
 	range = sqrt((endCoord.x - _curPos.x) * (endCoord.x - _curPos.x) +
 	(endCoord.y - _curPos.y) * (endCoord.y - _curPos.y) +
 		(endCoord.z - _curPos.z) * (endCoord.z - _curPos.z));
+	p->range = range > _maxRange ? _maxRange : range;
 
-	*p = range > _maxRange ? _maxRange : range;
 
 	//I dont kown why, activate these seem to be more fluently
 	if (_isVisual) {
@@ -526,7 +548,7 @@ inline void LiDAR::GenerateSinglePoint(float *scPhi_scTheta, float* p)
 #endif //DEBUG_LOG
 }
 
-inline void LiDAR::GenerateHorizPointClouds(float phi, float resolu, int smplNum, float *p)
+inline void LiDAR::GenerateHorizPointClouds(float phi, float resolu, int smplNum, ray *p)
 {
 	int i, j;
 	float theta, scPhi_scTheta[4] = { sin(phi*D2R), cos(phi*D2R), .0f, .0f };
@@ -557,7 +579,7 @@ inline void LiDAR::GenerateHorizPointClouds(float phi, float resolu, int smplNum
 	}
 }
 
-inline void LiDAR::GenerateHorizPointClouds(float phi, float resolu, int smplNum, float *p, std::vector<float>& sinTheta, std::vector<float>& cosTheta) {
+inline void LiDAR::GenerateHorizPointClouds(float phi, float resolu, int smplNum, ray *p, std::vector<float>& sinTheta, std::vector<float>& cosTheta) {
 	int i, j;
 	float theta, scPhi_scTheta[4] = { sin(phi*D2R), cos(phi*D2R), .0f, .0f };
 
@@ -589,6 +611,7 @@ inline void LiDAR::GenerateHorizPointClouds(float phi, float resolu, int smplNum
 
 inline void LiDAR::UpdatePosAngles()
 {
+	// Coordinate transformation
 	_curPos = CAM::GET_CAM_COORD(_camera);
 
 	ENTITY::GET_ENTITY_QUATERNION(_vehicle, &_quaterion[0], &_quaterion[1], &_quaterion[2], &_quaterion[3]);
